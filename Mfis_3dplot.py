@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 
 
@@ -9,7 +9,10 @@ def M(eps_0i, d_n,d_s1, E_s, A_s1, d_p, E_c, b, d_s2, A_s2):
     C = 0.5 * eps_0i * E_c * b * d_n
     T_s = -eps_0i * (d_s2 - d_n) / d_n * E_s * A_s2
 
-    return (C_s * (d_p - d_s1) + C * (d_p - d_c) + T_s * (d_s2 - d_p)) * 1e-6
+    return (C_s * (d_s1 - d_p) + C * (d_c - d_p) + T_s * (d_p - d_s2)) * 1e-6
+
+def per_mille_formatter(x, pos):
+    return '{:.2f}‰'.format(x * 1000)
 
 if __name__ == "__main__":
     # globals
@@ -32,7 +35,7 @@ if __name__ == "__main__":
 
     # make data
     eps_0i = np.linspace(0.0001, -0.002, 100)
-    d_n = np.linspace(1, h, 100)
+    d_n = np.linspace(.05 * h, h, 100)
     # Calculate values of M for all combinations of eps_0i and d_n
     eps_0i_mesh, d_n_mesh = np.meshgrid(eps_0i, d_n)
     M_values = M(eps_0i_mesh, d_n_mesh, d_s1, E_s, A_s1, d_p, E_c, b, d_s2, A_s2)
@@ -47,5 +50,5 @@ if __name__ == "__main__":
     ax.set_ylabel('d_n')
     ax.set_zlabel('M(eps_0i, d_n)')
     ax.set_title('3D Plot of M(eps_0i, d_n)')
-
+    #ax.gca().xaxis.set_major_formatter(FuncFormatter(per_mille_formatter))
     plt.show()
