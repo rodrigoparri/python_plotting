@@ -1,9 +1,15 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator
 
+def M(eps_0i, d_n,d_s1, E_s, A_s1, d_p, E_c, b, d_s2, A_s2):
+    d_c = d_n / 3
+    C_s = eps_0i * (d_n - d_s1) / d_n * E_s * A_s1
+    C = 0.5 * eps_0i * E_c * b * d_n
+    T_s = -eps_0i * (d_s2 - d_n) / d_n * E_s * A_s2
+
+    return (C_s * (d_p - d_s1) + C * (d_p - d_c) + T_s * (d_s2 - d_p)) * 1e-6
 
 if __name__ == "__main__":
     # globals
@@ -24,45 +30,22 @@ if __name__ == "__main__":
     E_p = 195000
     P_e = 1500000
 
-    # figure
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     # make data
-    # eps_0i = np.arange(0, 0.002, 0.0001)
-    # d_n = np.arange(0, h, 1)
+    eps_0i = np.linspace(0.0001, -0.002, 100)
+    d_n = np.linspace(1, h, 100)
+    # Calculate values of M for all combinations of eps_0i and d_n
+    eps_0i_mesh, d_n_mesh = np.meshgrid(eps_0i, d_n)
+    M_values = M(eps_0i_mesh, d_n_mesh, d_s1, E_s, A_s1, d_p, E_c, b, d_s2, A_s2)
 
-    # force functions
-    # C_s = eps_0i * (d_n - d_s1) / d_n * E_s * A_s1
-    # C = 0.5 * eps_0i * E_c * b * d_n
-    # T_s = eps_0i * (d_s2 - d_n) / d_n * E_s * A_s2
-    X = []
-    Y = []
-    Z = []
-    for eps_0i in np.linspace(0.0001, 0.002, 100):
-        for d_n in np.linspace(1, h, 100):
-            # some functions where d_n needs to be defined
-            e = d_p - d_n
-            d_c = d_n / 3
-            # moment function
-            M = (eps_0i * (d_n - d_s1) / d_n * E_s * A_s1) * (d_s1 + d_p) + \
-            (0.5 * eps_0i * E_c * b * d_n) * (d_c + d_p) + \
-            (eps_0i * (d_s2 - d_n) / d_n * E_s * A_s2) * (d_s2 - d_n)
-            X.append(eps_0i)
-            Y.append(d_n)
-            Z.append(M)
+    # Plot the 3D surface
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(eps_0i_mesh, d_n_mesh, M_values, cmap='viridis')
 
-
-    x = np.array(X)
-    y = np.array(Y)
-    x, y = np.meshgrid(x, y)
-    z = np.array(Z)
-
-    graf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False)
-
-    ax.set_zlim(0, 1E6)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    ax.zaxis.set_major_formatter('{x:.02f}')
-
-    fig.colorbar(graf, shrink=0.5, aspect=5)
+    # Set labels and title
+    ax.set_xlabel('eps_0i')
+    ax.set_ylabel('d_n')
+    ax.set_zlabel('M(eps_0i, d_n)')
+    ax.set_title('3D Plot of M(eps_0i, d_n)')
 
     plt.show()
